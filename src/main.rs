@@ -44,8 +44,23 @@ fn main() -> () {
                     },
                     Cell::Female | Cell::Male => {
                         /*- If cell can reproduce -*/
-                        if let Some(move_to) = Grid::can_reproduce(&_grid, (x, y)) {
-                            _grid._move(this_cell.clone(), (x, y), move_to)
+                        if let Some(_) = Grid::can_reproduce(&_grid, (x, y)) {
+                            /*- Random 10% chance -*/
+                            match rng.gen_bool(0.1) {
+                                true => {
+                                    let move_to = (
+                                        rng.gen_range(0..GRID_SIZE),
+                                        rng.gen_range(0..GRID_SIZE)
+                                    );
+
+                                    /*- Spawn either female or male at random spot -*/
+                                    match rng.gen_bool(0.5) {
+                                        true => _grid.set(move_to.0, move_to.1, Cell::Female),
+                                        false => _grid.set(move_to.0, move_to.1, Cell::Male)
+                                    }
+                                }
+                                false => ()
+                            }
                         }
 
                         /*- Move to random spot around -*/

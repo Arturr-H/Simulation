@@ -1,9 +1,10 @@
 use std::slice::SliceIndex;
 
 /*- Imports -*/
-use rand::{self, Rng};
+use rand::{self, Rng, rngs::ThreadRng};
 
 /*- Main -*/
+#[derive(Clone)]
 pub struct Grid {
     /// All cells are stored here in 2d vec
     cells:Vec<Vec<Cell>>,
@@ -13,7 +14,7 @@ pub struct Grid {
 }
 
 /*- Cell -*/
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum Cell {
     Dead = 0,
 
@@ -91,11 +92,25 @@ impl Grid {
 
     /// Move a tile
     pub fn _move(&mut self, cell:Cell, from:(usize, usize), to:(usize, usize)) -> () {
-        if self.get(to.0, to.1) == Some(&Cell::Predator) { return; };
+        let cell_to = self.get(to.0, to.1);
+        if cell_to == Some(&Cell::Predator) { return; };
+        if cell != Cell::Predator && (cell_to == Some(&Cell::Female) || cell_to == Some(&Cell::Male)) {
+            return
+        }
 
         /*- Remove current -*/
         self.set(from.0, from.1, Cell::Dead);
         self.set(to.0, to.1, cell);
+    }
+    pub fn _move_random(&self, rng:&mut ThreadRng, x:usize, y: usize) -> (usize, usize) {
+        let min_x = x.checked_sub(1).unwrap_or(0);
+        let min_y = y.checked_sub(1).unwrap_or(0);
+        let max_x = x.min(self.grid_size - 2);
+        let max_y = y.min(self.grid_size - 2);
+        (
+            rng.gen_range(min_x..=max_x + 1),
+            rng.gen_range(min_y..=max_y + 1)
+        )
     }
 
     /// Display the grid to stdout
@@ -166,5 +181,31 @@ impl Grid {
         if let Some(female) = Self::neighbours_contain(&neighbours, Cell::Female) { Some(female) }
         else if let Some(male) = Self::neighbours_contain(&neighbours, Cell::Male) {Some(male)   }
         else { None }
+    }
+
+    /// Return coordinates of where cell can reproduce
+    /// return None if there is no way of reproducing
+    pub fn can_reproduce(grid:&Self, cell:(usize, usize)) -> Option<(usize, usize)> {
+        /*- Get neighbouring cells -*/
+        let neighbours = grid.get_neighbours(cell.0, cell.1);
+        let this_cell = grid.get(cell.0, cell.1).unwrap();
+
+        /*- Check if has jump location -*/
+        match this_cell {
+            Cell::Female => {
+                if let Some(male) = Self::neighbours_contain(&neighbours, Cell::Male) { return Some(male) }
+                None
+            },
+            Cell::Male => {
+                if let Some(female) = Self::neighbours_contain(&neighbours, Cell::Female) { return Some(female) }
+                None
+            }
+            _ => None
+        }
+    }
+
+    /// Field cells
+    pub fn get_cells(&self) -> &Vec<Vec<Cell>> {
+        &self.cells
     }
 }

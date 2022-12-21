@@ -10,7 +10,29 @@ pub struct Grid {
     cells:Vec<Vec<Cell>>,
 
     /// grid size (square).
-    grid_size:usize
+    grid_size:usize,
+
+    /// Grid config
+    pub config: GridConfig
+}
+
+/*- Grid config -*/
+#[derive(Clone)]
+pub struct GridConfig {
+    /// Chance of predator randomly dying
+    pub predator_death_chance:f64,
+
+    /// Chance of predator reproducing after consuming
+    pub predator_reproduce_chance:f64,
+
+    /// Chance of regular cells reproducing
+    pub reproduce_chance:f64,
+
+    /// Intial spawning regular cell chance
+    pub spawn_chance:f64,
+
+    /// Chance of regular cell being a predator
+    pub predator_spawn_chance:f64
 }
 
 /*- Cell -*/
@@ -31,7 +53,7 @@ impl Grid {
     /// `size` will determine the grid size (square).
     /// `spawn_chance` determines the chance of spawning an
     /// alive cell on each position, which ranges 0.0 - 1.0
-    pub fn new(grid_size:usize, spawn_chance:f64, prey_chance:f64) -> Self {
+    pub fn new(grid_size:usize, config:GridConfig) -> Self {
         let mut cells:Vec<Vec<Cell>> = Vec::new();
         let mut rng = rand::thread_rng();
 
@@ -43,10 +65,10 @@ impl Grid {
             for x in 0..grid_size {
 
                 /*- If will spawn -*/
-                match rng.gen_bool(spawn_chance) {
+                match rng.gen_bool(config.spawn_chance) {
                     true => {
                         /*- If will be prey -*/
-                        match rng.gen_bool(prey_chance) {
+                        match rng.gen_bool(config.predator_spawn_chance) {
                             true => inner.push(Cell::Predator),
                             false => {
 
@@ -67,7 +89,7 @@ impl Grid {
         };
 
         /*- Return -*/
-        Self { cells, grid_size }
+        Self { cells, grid_size, config }
     }
 
     /// Get tile at coordinate

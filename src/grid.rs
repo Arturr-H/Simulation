@@ -25,6 +25,9 @@ pub struct GridConfig {
     /// Chance of predator reproducing after consuming
     pub predator_reproduce_chance:f64,
 
+    /// Chance of regular cells randomly dying
+    pub death_chance:f64,
+
     /// Chance of regular cells reproducing
     pub reproduce_chance:f64,
 

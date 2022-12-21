@@ -17,13 +17,14 @@ const GRID_SIZE: usize = 20;
 fn main() -> () {
     /*- Create grid -*/
     let mut grid = Grid::new(GRID_SIZE, GridConfig {
-        predator_death_chance:0.1,
-        predator_reproduce_chance:1.,
+        predator_death_chance:0.001,
+        predator_reproduce_chance:0.13,
 
-        reproduce_chance:0.1,
+        death_chance: 0.0,
+        reproduce_chance:0.5,
 
         spawn_chance:0.3,
-        predator_spawn_chance:0.03
+        predator_spawn_chance:0.3
     });
     let mut rng = rand::thread_rng();
 
@@ -65,6 +66,15 @@ fn main() -> () {
                         }
                     },
                     Cell::Female | Cell::Male => {
+                        /*- 10% chance to die -*/
+                        match rng.gen_bool(grid.config.death_chance) {
+                            true => {
+                                _grid.set(x, y, Cell::Dead);
+                                continue;
+                            },
+                            false => ()
+                        }
+
                         /*- If cell can reproduce -*/
                         if let Some(_) = Grid::can_reproduce(&_grid, (x, y)) {
                             /*- Random 10% chance -*/
@@ -107,7 +117,7 @@ fn main() -> () {
         /*- Set grid to new grid -*/
         grid = _grid;
 
-        std::thread::sleep(std::time::Duration::from_millis(100));
+        std::thread::sleep(std::time::Duration::from_millis(10));
 
         /*- Display -*/
         grid.display();
